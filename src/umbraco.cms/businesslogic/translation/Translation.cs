@@ -13,18 +13,21 @@ using Umbraco.Core.IO;
 
 namespace umbraco.cms.businesslogic.translation
 {
+    [Obsolete("This will be removed in future versions, the translation utility will not work perfectly in v7.x")]
     public class Translation
     {
         public static void MakeNew(CMSNode Node, User User, User Translator, Language Language, string Comment,
                                    bool IncludeSubpages, bool SendEmail)
         {
+            // Get translation taskType for obsolete task constructor
+            var taskType = ApplicationContext.Current.Services.TaskService.GetTaskTypeByAlias("toTranslate");
+
             // Create pending task
-            Task t = new Task();
+            Task t = new Task(new Umbraco.Core.Models.Task(taskType));
             t.Comment = Comment;
             t.Node = Node;
             t.ParentUser = User;
             t.User = Translator;
-            t.Type = new TaskType("toTranslate");
             t.Save();
 
             // Add log entry

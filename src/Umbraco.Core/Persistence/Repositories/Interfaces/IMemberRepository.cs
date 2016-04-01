@@ -9,7 +9,7 @@ using Umbraco.Core.Persistence.Querying;
 
 namespace Umbraco.Core.Persistence.Repositories
 {
-    public interface IMemberRepository : IRepositoryVersionable<int, IMember>
+    public interface IMemberRepository : IRepositoryVersionable<int, IMember>, IDeleteMediaFilesRepository
     {
         /// <summary>
         /// Finds members in a given role
@@ -53,7 +53,7 @@ namespace Umbraco.Core.Persistence.Repositories
         /// <param name="orderBySystemField">Flag to indicate when ordering by system field</param>
         /// <param name="filter">Search query</param>
         /// <returns></returns>
-        IEnumerable<IMember> GetPagedResultsByQuery(IQuery<IMember> query, int pageIndex, int pageSize, out int totalRecords,
+        IEnumerable<IMember> GetPagedResultsByQuery(IQuery<IMember> query, long pageIndex, int pageSize, out long totalRecords,
             string orderBy, Direction orderDirection, bool orderBySystemField, string filter = "");
 
         //IEnumerable<IMember> GetPagedResultsByQuery<TDto>(

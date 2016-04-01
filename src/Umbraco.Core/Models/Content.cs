@@ -95,13 +95,7 @@ namespace Umbraco.Core.Models
         [DataMember]
         public virtual ITemplate Template
         {
-            get
-            {
-                if (_template == null)
-                    return _contentType.DefaultTemplate;
-
-                return _template;
-            }
+            get { return _template; }
             set
             {
                 SetPropertyValueAndDetectChanges(o =>
@@ -160,10 +154,7 @@ namespace Umbraco.Core.Models
         /// <summary>
         /// Language of the data contained within this Content object.
         /// </summary>
-        /// <remarks>
-        /// Left internal until multilingual support is implemented.
-        /// </remarks>
-        [DataMember]
+        [Obsolete("This is not used and will be removed from the codebase in future versions")]
         public string Language
         {
             get { return _language; }
@@ -322,6 +313,17 @@ namespace Umbraco.Core.Models
         internal PublishedState PublishedState { get; set; }
 
         /// <summary>
+        /// Gets or sets the unique identifier of the published version, if any.
+        /// </summary>
+        [IgnoreDataMember]
+        public Guid PublishedVersionGuid { get; internal set; }
+
+        /// <summary>
+        /// Gets a value indicating whether the content has a published version.
+        /// </summary>
+        public bool HasPublishedVersion { get { return PublishedVersionGuid != default(Guid); } }
+
+        /// <summary>
         /// Changes the Trashed state of the content object
         /// </summary>
         /// <param name="isTrashed">Boolean indicating whether content is trashed (true) or not trashed (false)</param>
@@ -338,18 +340,6 @@ namespace Umbraco.Core.Models
             }
         }
         
-        /// <summary>
-        /// Method to call when Entity is being saved
-        /// </summary>
-        /// <remarks>Created date is set and a Unique key is assigned</remarks>
-        internal override void AddingEntity()
-        {
-            base.AddingEntity();
-
-            if(Key == Guid.Empty)
-                Key = Guid.NewGuid();
-        }
-
         /// <summary>
         /// Method to call when Entity is being updated
         /// </summary>

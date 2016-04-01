@@ -1,6 +1,8 @@
 ﻿using System;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
+using Umbraco.Core.Models;
+using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Web.PublishedCache;
 using Umbraco.Web.PublishedCache.XmlPublishedCache;
 
@@ -39,8 +41,8 @@ namespace Umbraco.Web.Cache
         }
 
         private void ClearCache()
-        {
-            ApplicationContext.Current.ApplicationCache.ClearCacheItem(CacheKeys.DomainCacheKey);
+        {            
+            ClearAllIsolatedCacheByEntityType<IDomain>();
 
             // SD: we need to clear the routes cache here!             
             //

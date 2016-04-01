@@ -19,7 +19,17 @@ namespace Umbraco.Web
     /// Provides extension methods for <c>IPublishedContent</c>.
     /// </summary>
 	public static class PublishedContentExtensions
-	{    
+    {
+        #region Key
+
+        public static Guid GetKey(this IPublishedContent content)
+        {
+            var contentWithKey = content as IPublishedContentWithKey;
+            return contentWithKey == null ? Guid.Empty : contentWithKey.Key;
+        }
+
+        #endregion
+
         #region Urls
 
         /// <summary>
@@ -103,6 +113,21 @@ namespace Umbraco.Web
             var template = ApplicationContext.Current.Services.FileService.GetTemplate(content.TemplateId);
 			return template == null ? string.Empty : template.Alias;
 		}
+
+        #endregion
+
+        #region IsComposedOf
+
+        /// <summary>
+        /// Gets a value indicating whether the content is of a content type composed of the given alias
+        /// </summary>
+        /// <param name="content">The content.</param>
+        /// <param name="alias">The content type alias.</param>
+        /// <returns>A value indicating whether the content is of a content type composed of a content type identified by the alias.</returns>
+        public static bool IsComposedOf(this IPublishedContent content, string alias)
+        {
+            return content.ContentType.CompositionAliases.Contains(alias);
+        }
 
         #endregion
 
@@ -1734,7 +1759,7 @@ namespace Umbraco.Web
 
         public static IPublishedContent FirstChild(this IPublishedContent content)
         {
-            return content.Children().First();
+            return content.Children().FirstOrDefault();
         }
 
         public static IPublishedContent FirstChild(this IPublishedContent content, Func<IPublishedContent, bool> predicate)
@@ -1898,6 +1923,7 @@ namespace Umbraco.Web
         public static CultureInfo GetCulture(this IPublishedContent content, Uri current = null)
         {
             return Models.ContentExtensions.GetCulture(UmbracoContext.Current,
+                ApplicationContext.Current.Services.DomainService, 
                 ApplicationContext.Current.Services.LocalizationService,
                 ApplicationContext.Current.Services.ContentService,
                 content.Id, content.Path,

@@ -3,33 +3,38 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Umbraco.Core.Configuration;
+using Umbraco.Core.Configuration.UmbracoSettings;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.Editors;
 using Umbraco.Core.Models.EntityBase;
 using Umbraco.Core.Models.Rdbms;
-using Umbraco.Core.Persistence.Caching;
+
 using Umbraco.Core.Persistence.DatabaseModelDefinitions;
 using Umbraco.Core.Persistence.Factories;
 using Umbraco.Core.Persistence.Querying;
+using Umbraco.Core.Persistence.SqlSyntax;
 using Umbraco.Core.Persistence.UnitOfWork;
 using Umbraco.Core.PropertyEditors;
 using Umbraco.Core.Services;
 using Umbraco.Core.Dynamics;
+using Umbraco.Core.IO;
 
 namespace Umbraco.Core.Persistence.Repositories
 {
     using SqlSyntax;
-
     internal abstract class VersionableRepositoryBase<TId, TEntity> : PetaPocoRepositoryBase<TId, TEntity>
         where TEntity : class, IAggregateRoot
     {
-        protected VersionableRepositoryBase(IDatabaseUnitOfWork work) : base(work)
-        {
-        }
+        private readonly IContentSection _contentSection;
 
-        protected VersionableRepositoryBase(IDatabaseUnitOfWork work, IRepositoryCacheProvider cache) : base(work, cache)
+        protected VersionableRepositoryBase(IDatabaseUnitOfWork work, CacheHelper cache, ILogger logger, ISqlSyntaxProvider sqlSyntax, IContentSection contentSection)
+            : base(work, cache, logger, sqlSyntax)
         {
+            _contentSection = contentSection;
         }
 
         #region IRepositoryVersionable Implementation
@@ -38,14 +43,14 @@ namespace Umbraco.Core.Persistence.Repositories
         {
             var sql = new Sql();
             sql.Select("*")
-                .From<ContentVersionDto>()
-                .InnerJoin<ContentDto>()
-                .On<ContentVersionDto, ContentDto>(left => left.NodeId, right => right.NodeId)
-                .InnerJoin<NodeDto>()
-                .On<ContentDto, NodeDto>(left => left.NodeId, right => right.NodeId)
+                .From<ContentVersionDto>(SqlSyntax)
+                .InnerJoin<ContentDto>(SqlSyntax)
+                .On<ContentVersionDto, ContentDto>(SqlSyntax, left => left.NodeId, right => right.NodeId)
+                .InnerJoin<NodeDto>(SqlSyntax)
+                .On<ContentDto, NodeDto>(SqlSyntax, left => left.NodeId, right => right.NodeId)
                 .Where<NodeDto>(x => x.NodeObjectType == NodeObjectTypeId)
                 .Where<NodeDto>(x => x.NodeId == id)
-                .OrderByDescending<ContentVersionDto>(x => x.VersionDate);
+                .OrderByDescending<ContentVersionDto>(x => x.VersionDate, SqlSyntax);
 
             var dtos = Database.Fetch<ContentVersionDto, ContentDto, NodeDto>(sql);
             foreach (var dto in dtos)
@@ -57,11 +62,11 @@ namespace Umbraco.Core.Persistence.Repositories
         public virtual void DeleteVersion(Guid versionId)
         {
             var dto = Database.FirstOrDefault<ContentVersionDto>("WHERE versionId = @VersionId", new { VersionId = versionId });
-            if(dto == null) return;
+            if (dto == null) return;
 
             //Ensure that the lastest version is not deleted
             var latestVersionDto = Database.FirstOrDefault<ContentVersionDto>("WHERE ContentId = @Id ORDER BY VersionDate DESC", new { Id = dto.NodeId });
-            if(latestVersionDto.VersionId == dto.VersionId)
+            if (latestVersionDto.VersionId == dto.VersionId)
                 return;
 
             using (var transaction = Database.GetTransaction())
@@ -79,7 +84,7 @@ namespace Umbraco.Core.Persistence.Repositories
             var list =
                 Database.Fetch<ContentVersionDto>(
                     "WHERE versionId <> @VersionId AND (ContentId = @Id AND VersionDate < @VersionDate)",
-                    new {VersionId = latestVersionDto.VersionId, Id = id, VersionDate = versionDate});
+                    new { VersionId = latestVersionDto.VersionId, Id = id, VersionDate = versionDate });
             if (list.Any() == false) return;
 
             using (var transaction = Database.GetTransaction())
@@ -261,8 +266,8 @@ namespace Umbraco.Core.Persistence.Repositories
                     }
                 }
             }
-            else 
-            { 
+            else
+            {
                 // Sorting by a custom field, so set-up sub-query for ORDER BY clause to pull through valie
                 // from most recent content version for the given order by field
                 var sortedInt = string.Format(SqlSyntaxContext.SqlSyntaxProvider.ConvertIntegerToOrderableString, "dataInt");
@@ -270,21 +275,21 @@ namespace Umbraco.Core.Persistence.Repositories
                 var sortedString = string.Format(SqlSyntaxContext.SqlSyntaxProvider.IsNull, "dataNvarchar", "''");
 
                 var orderBySql = string.Format(@"ORDER BY (
-	                SELECT CASE
-		                WHEN dataInt Is Not Null THEN {0}
-		                WHEN dataDate Is Not Null THEN {1}
-		                ELSE {2}
-	                END 
-	                FROM cmsContent c
-	                INNER JOIN cmsContentVersion cv ON cv.ContentId = c.nodeId AND VersionDate = (
-		                SELECT Max(VersionDate)
-		                FROM cmsContentVersion
-		                WHERE ContentId = c.nodeId
-	                )
-	                INNER JOIN cmsPropertyData cpd ON cpd.contentNodeId = c.nodeId
-		                AND cpd.versionId = cv.VersionId
-	                INNER JOIN cmsPropertyType cpt ON cpt.Id = cpd.propertytypeId
-	                WHERE c.nodeId = umbracoNode.Id and cpt.Alias = @0)", sortedInt, sortedDate, sortedString);
+ 	                SELECT CASE
+ 		                WHEN dataInt Is Not Null THEN {0}
+ 		                WHEN dataDate Is Not Null THEN {1}
+ 		                ELSE {2}
+ 	                END 
+ 	                FROM cmsContent c
+ 	                INNER JOIN cmsContentVersion cv ON cv.ContentId = c.nodeId AND VersionDate = (
+ 		                SELECT Max(VersionDate)
+ 		                FROM cmsContentVersion
+ 		                WHERE ContentId = c.nodeId
+ 	                )
+ 	                INNER JOIN cmsPropertyData cpd ON cpd.contentNodeId = c.nodeId
+ 		                AND cpd.versionId = cv.VersionId
+ 	                INNER JOIN cmsPropertyType cpt ON cpt.Id = cpd.propertytypeId
+ 	                WHERE c.nodeId = umbracoNode.Id and cpt.Alias = @0)", sortedInt, sortedDate, sortedString);
 
                 sortedSql.Append(orderBySql, orderBy);
                 if (orderDirection == Direction.Descending)
@@ -292,7 +297,6 @@ namespace Umbraco.Core.Persistence.Repositories
                     sortedSql.Append(" DESC");
                 }
             }
-
             return sortedSql;
         }
 
@@ -313,10 +317,10 @@ namespace Umbraco.Core.Persistence.Repositories
         /// <param name="orderBySystemField">Flag to indicate when ordering by system field</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">orderBy</exception>
-        protected IEnumerable<TEntity> GetPagedResultsByQuery<TDto,TContentBase>(IQuery<TEntity> query, int pageIndex, int pageSize, out int totalRecords,
+        protected IEnumerable<TEntity> GetPagedResultsByQuery<TDto, TContentBase>(IQuery<TEntity> query, long pageIndex, int pageSize, out long totalRecords,
             Tuple<string, string> nodeIdSelect,
             Func<Sql, IEnumerable<TEntity>> processQuery,
-            string orderBy, 
+            string orderBy,
             Direction orderDirection,
             bool orderBySystemField,
             Func<Tuple<string, object[]>> defaultFilter = null)
@@ -330,14 +334,14 @@ namespace Umbraco.Core.Persistence.Repositories
             if (query == null) query = new Query<TEntity>();
             var translator = new SqlTranslator<TEntity>(sqlBase, query);
             var sqlQuery = translator.Translate();
-            
+
             // Note we can't do multi-page for several DTOs like we can multi-fetch and are doing in PerformGetByQuery, 
             // but actually given we are doing a Get on each one (again as in PerformGetByQuery), we only need the node Id.
             // So we'll modify the SQL.
             var sqlNodeIds = new Sql(
-                sqlQuery.SQL.Replace("SELECT *", string.Format("SELECT {0}.{1}",nodeIdSelect.Item1, nodeIdSelect.Item2)), 
+                sqlQuery.SQL.Replace("SELECT *", string.Format("SELECT {0}.{1}", nodeIdSelect.Item1, nodeIdSelect.Item2)),
                 sqlQuery.Arguments);
-            
+
             //get sorted and filtered sql
             var sqlNodeIdsWithSort = GetSortedSqlForPagedResults(
                 GetFilteredSqlForPagedResults(sqlNodeIds, defaultFilter),
@@ -357,7 +361,7 @@ namespace Umbraco.Core.Persistence.Repositories
                 var args = sqlNodeIdsWithSort.Arguments;
                 string sqlStringCount, sqlStringPage;
                 Database.BuildPageQueries<TDto>(pageIndex * pageSize, pageSize, sqlNodeIdsWithSort.SQL, ref args, out sqlStringCount, out sqlStringPage);
-                
+
                 //if this is for sql server, the sqlPage will start with a SELECT * but we don't want that, we only want to return the nodeId                
                 sqlStringPage = sqlStringPage
                     .Replace("SELECT *",
@@ -366,7 +370,7 @@ namespace Umbraco.Core.Persistence.Repositories
                         "SELECT " + nodeIdSelect.Item2);
 
                 //We need to make this an inner join on the paged query
-                var splitQuery = sqlQuery.SQL.Split(new[] {"WHERE "}, StringSplitOptions.None);
+                var splitQuery = sqlQuery.SQL.Split(new[] { "WHERE " }, StringSplitOptions.None);
                 var withInnerJoinSql = new Sql(splitQuery[0])
                     .Append("INNER JOIN (")
                     //join the paged query with the paged query arguments
@@ -378,9 +382,8 @@ namespace Umbraco.Core.Persistence.Repositories
 
                 //get sorted and filtered sql
                 var fullQuery = GetSortedSqlForPagedResults(
-                    GetFilteredSqlForPagedResults(withInnerJoinSql, defaultFilter),                     
+                    GetFilteredSqlForPagedResults(withInnerJoinSql, defaultFilter),
                     orderDirection, orderBy, orderBySystemField);
-
                 return processQuery(fullQuery);
             }
             else
@@ -414,15 +417,15 @@ INNER JOIN
 	(" + string.Format(parsedOriginalSql, "cmsContent.nodeId, cmsContentVersion.VersionId") + @") as docData
 ON cmsPropertyData.versionId = docData.VersionId AND cmsPropertyData.contentNodeId = docData.nodeId
 LEFT OUTER JOIN cmsDataTypePreValues
-ON cmsPropertyType.dataTypeId = cmsDataTypePreValues.datatypeNodeId", docSql.Arguments); 
+ON cmsPropertyType.dataTypeId = cmsDataTypePreValues.datatypeNodeId", docSql.Arguments);
 
-            var allPropertyData = Database.Fetch<PropertyDataDto>(propSql); 
+            var allPropertyData = Database.Fetch<PropertyDataDto>(propSql);
 
             //This is a lazy access call to get all prevalue data for the data types that make up all of these properties which we use
             // below if any property requires tag support
             var allPreValues = new Lazy<IEnumerable<DataTypePreValueDto>>(() =>
             {
-                var preValsSql = new Sql(@"SELECT a.id as preValId, a.value, a.sortorder, a.alias, a.datatypeNodeId
+                var preValsSql = new Sql(@"SELECT a.id, a.value, a.sortorder, a.alias, a.datatypeNodeId
 FROM cmsDataTypePreValues a
 WHERE EXISTS(
     SELECT DISTINCT b.id as preValIdInner
@@ -434,7 +437,7 @@ WHERE EXISTS(
     ON cmsPropertyType.contentTypeId = docData.contentType
     WHERE a.id = b.id)", docSql.Arguments);
 
-                return Database.Fetch<DataTypePreValueDto>(preValsSql); 
+                return Database.Fetch<DataTypePreValueDto>(preValsSql);
             });
 
             var result = new Dictionary<int, PropertyCollection>();
@@ -452,8 +455,8 @@ WHERE EXISTS(
                     var propertyDataDtos = allPropertyData.Where(x => x.NodeId == def.Id).Distinct();
 
                     var propertyFactory = new PropertyFactory(compositionProperties, def.Version, def.Id, def.CreateDate, def.VersionDate);
-                    var properties = propertyFactory.BuildEntity(propertyDataDtos.ToArray()).ToArray();                    
-                    
+                    var properties = propertyFactory.BuildEntity(propertyDataDtos.ToArray()).ToArray();
+
                     var newProperties = properties.Where(x => x.HasIdentity == false && x.PropertyType.HasIdentity);
 
                     foreach (var property in newProperties)
@@ -498,10 +501,10 @@ WHERE EXISTS(
 
                     if (result.ContainsKey(def.Id))
                     {
-                        LogHelper.Warn<VersionableRepositoryBase<TId, TEntity>>("The query returned multiple property sets for document definition " + def.Id + ", " + def.Composition.Name);
+                        Logger.Warn<VersionableRepositoryBase<TId, TEntity>>("The query returned multiple property sets for document definition " + def.Id + ", " + def.Composition.Name);
                     }
                     result[def.Id] = new PropertyCollection(properties);
-                }                
+                }
             }
 
             return result;
@@ -534,17 +537,19 @@ WHERE EXISTS(
             // of ContentItemBasic instances) to the database field names.
             switch (orderBy.ToUpperInvariant())
             {
+                case "UPDATEDATE":
+                    return "cmsContentVersion.VersionDate";
                 case "NAME":
                     return "umbracoNode.text";
                 case "OWNER":
                     //TODO: This isn't going to work very nicely because it's going to order by ID, not by letter
                     return "umbracoNode.nodeUser";
-
                 // Members only
                 case "USERNAME":
                     return "cmsMember.LoginName";
                 default:
-                    return orderBy;
+                    //ensure invalid SQL cannot be submitted
+                    return Regex.Replace(orderBy, @"[^\w\.,`\[\]@-]", "");
             }
         }
 
@@ -563,8 +568,54 @@ WHERE EXISTS(
                 case "VERSIONDATE":
                     return "UpdateDate";
                 default:
-                    return orderBy;
+                    //ensure invalid SQL cannot be submitted
+                    return Regex.Replace(orderBy, @"[^\w\.,`\[\]@-]", "");
             }
+        }
+
+        /// <summary>
+        /// Deletes all media files passed in.
+        /// </summary>
+        /// <param name="files"></param>
+        /// <returns></returns>
+        public virtual bool DeleteMediaFiles(IEnumerable<string> files)
+        {
+            //ensure duplicates are removed
+            files = files.Distinct();
+
+            var allsuccess = true;
+
+            var fs = FileSystemProviderManager.Current.GetFileSystemProvider<MediaFileSystem>();
+            Parallel.ForEach(files, file =>
+            {
+                try
+                {
+                    if (file.IsNullOrWhiteSpace()) return;
+
+                    var relativeFilePath = fs.GetRelativePath(file);
+                    if (fs.FileExists(relativeFilePath) == false) return;
+
+                    var parentDirectory = System.IO.Path.GetDirectoryName(relativeFilePath);
+
+                    // don't want to delete the media folder if not using directories.
+                    if (_contentSection.UploadAllowDirectories && parentDirectory != fs.GetRelativePath("/"))
+                    {
+                        //issue U4-771: if there is a parent directory the recursive parameter should be true
+                        fs.DeleteDirectory(parentDirectory, String.IsNullOrEmpty(parentDirectory) == false);
+                    }
+                    else
+                    {
+                        fs.DeleteFile(file, true);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Error<VersionableRepositoryBase<TId, TEntity>>("An error occurred while deleting file attached to nodes: " + file, e);
+                    allsuccess = false;
+                }
+            });
+
+            return allsuccess;
         }
     }
 }
