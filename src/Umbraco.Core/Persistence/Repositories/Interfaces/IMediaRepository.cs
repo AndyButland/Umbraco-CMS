@@ -7,9 +7,9 @@ using Umbraco.Core.Persistence.Querying;
 
 namespace Umbraco.Core.Persistence.Repositories
 {
-    public interface IMediaRepository : IRepositoryVersionable<int, IMedia>, IRecycleBinRepository<IMedia>
+    public interface IMediaRepository : IRepositoryVersionable<int, IMedia>, IRecycleBinRepository<IMedia>, IDeleteMediaFilesRepository
     {
-        
+
         /// <summary>
         /// Used to add/update published xml for the media item
         /// </summary>
@@ -36,7 +36,7 @@ namespace Umbraco.Core.Persistence.Repositories
         /// <param name="orderBySystemField">Flag to indicate when ordering by system field</param>
         /// <param name="filter">Search text filter</param>
         /// <returns>An Enumerable list of <see cref="IMedia"/> objects</returns>
-        IEnumerable<IMedia> GetPagedResultsByQuery(IQuery<IMedia> query, int pageIndex, int pageSize, out int totalRecords,
+        IEnumerable<IMedia> GetPagedResultsByQuery(IQuery<IMedia> query, long pageIndex, int pageSize, out long totalRecords,
             string orderBy, Direction orderDirection, bool orderBySystemField, string filter = "");
     }
 }
