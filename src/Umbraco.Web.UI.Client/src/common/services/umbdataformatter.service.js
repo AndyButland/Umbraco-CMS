@@ -81,7 +81,7 @@
             formatUserPostData: function (displayModel) {
 
                 //create the save model from the display model
-                var saveModel = _.pick(displayModel, 'id', 'parentId', 'name', 'username', 'culture', 'email', 'startContentIds', 'startMediaIds', 'userGroups', 'message', 'changePassword');
+                var saveModel = _.pick(displayModel, 'id', 'parentId', 'name', 'username', 'culture', 'email', 'startContentNodes', 'startMediaNodes', 'userGroups', 'message', 'changePassword');
 
                 //make sure the userGroups are just a string array
                 var currGroups = saveModel.userGroups;
@@ -97,7 +97,7 @@
                 saveModel.userGroups = formattedGroups;
 
                 //make sure the startnodes are just a string array
-                var props = ["startContentIds", "startMediaIds"];
+                var props = ["startContentNodes", "startMediaNodes"];
                 for (var m = 0; m < props.length; m++) {
                     var startIds = saveModel[props[m]];
                     if (!startIds) {

@@ -152,7 +152,7 @@
                 title: vm.labels.selectContentStartNode,
                 view: "contentpicker",
                 multiPicker: true,
-                selection: vm.user.startContentIds,
+                selection: vm.user.startContentNodes,
                 hideHeader: false,
                 show: true,
                 submit: function (model) {
@@ -163,7 +163,7 @@
                                 item.name = vm.labels.contentRoot;
                                 item.icon = "icon-folder";
                             }
-                            multiSelectItem(item, vm.user.startContentIds);
+                            multiSelectItem(item, vm.user.startContentNodes);
                         });
                     }
                     // close overlay
@@ -196,7 +196,7 @@
                                 item.name = vm.labels.mediaRoot;
                                 item.icon = "icon-folder";
                             }
-                            multiSelectItem(item, vm.user.startMediaIds);
+                            multiSelectItem(item, vm.user.startMediaNodes);
                         });
                     }
                     // close overlay

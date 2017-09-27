@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
@@ -35,8 +36,8 @@ namespace Umbraco.Tests.Models
                 PasswordQuestion = "question",
                 //ProviderUserKey = "user key",
                 SessionTimeout = 5,
-                StartContentIds = new []{ 3 },
-                StartMediaIds = new[]{ 8 },
+                StartContentNodes = new List<StartNode> { new StartNode(3) },
+                StartMediaNodes = new List<StartNode> { new StartNode(8) },
                 Username = "username"                            
             };
           
@@ -82,8 +83,8 @@ namespace Umbraco.Tests.Models
                 PasswordQuestion = "question",
                 //ProviderUserKey = "user key",
                 SessionTimeout = 5,
-                StartContentIds = new[]{ 3 },
-                StartMediaIds = new []{ 8 },
+                StartContentNodes = new List<StartNode> { new StartNode(3) },
+                StartMediaNodes = new List<StartNode> { new StartNode(8) },
                 Username = "username"
             };
 

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Umbraco.Core;
@@ -197,8 +198,8 @@ namespace Umbraco.Tests.Persistence.Repositories
                 resolved.IsApproved = false;
                 resolved.RawPasswordValue = "new";
                 resolved.IsLockedOut = true;
-                resolved.StartContentIds = new[] { content.Id };
-                resolved.StartMediaIds = new[] { media.Id };
+                resolved.StartContentNodes = new List<StartNode> { new StartNode(content.Id) };
+                resolved.StartMediaNodes = new List<StartNode> { new StartNode(media.Id) };
                 resolved.Email = "new@new.com";
                 resolved.Username = "newName";
 

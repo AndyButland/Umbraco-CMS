@@ -29,8 +29,8 @@ namespace Umbraco.Core.Models.Membership
             _language = GlobalSettings.DefaultUILanguage;
             _isApproved = true;
             _isLockedOut = false;
-            _startContentIds = new int[] { };
-            _startMediaIds = new int[] { };
+            _startContentNodes = new List<StartNode>();
+            _startMediaNodes = new List<StartNode>();
             //cannot be null
             _rawPasswordValue = "";
         }
@@ -57,9 +57,8 @@ namespace Umbraco.Core.Models.Membership
             _userGroups = new HashSet<IReadOnlyUserGroup>();
             _isApproved = true;
             _isLockedOut = false;
-            _startContentIds = new int[] { };
-            _startMediaIds = new int[] { };
-            
+            _startContentNodes = new List<StartNode>();
+            _startMediaNodes = new List<StartNode>();
         }
 
         /// <summary>
@@ -71,16 +70,18 @@ namespace Umbraco.Core.Models.Membership
         /// <param name="username"></param>
         /// <param name="rawPasswordValue"></param>
         /// <param name="userGroups"></param>
-        /// <param name="startContentIds"></param>
-        /// <param name="startMediaIds"></param>
-        public User(int id, string name, string email, string username, string rawPasswordValue, IEnumerable<IReadOnlyUserGroup> userGroups, int[] startContentIds, int[] startMediaIds)
+        /// <param name="startContentNodes"></param>
+        /// <param name="startMediaNodes"></param>
+        public User(int id, string name, string email, string username, string rawPasswordValue, 
+                IEnumerable<IReadOnlyUserGroup> userGroups, 
+                IEnumerable<StartNode> startContentNodes, IEnumerable<StartNode> startMediaNodes)
             : this()
         {
             //we allow whitespace for this value so just check null
             if (rawPasswordValue == null) throw new ArgumentNullException("rawPasswordValue");
             if (userGroups == null) throw new ArgumentNullException("userGroups");
-            if (startContentIds == null) throw new ArgumentNullException("startContentIds");
-            if (startMediaIds == null) throw new ArgumentNullException("startMediaIds");
+            if (startContentNodes == null) throw new ArgumentNullException("startContentNodes");
+            if (startMediaNodes == null) throw new ArgumentNullException("startMediaNodes");
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Value cannot be null or whitespace.", "name");
             if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Value cannot be null or whitespace.", "username");            
 
@@ -92,16 +93,16 @@ namespace Umbraco.Core.Models.Membership
             _userGroups = new HashSet<IReadOnlyUserGroup>(userGroups);
             _isApproved = true;
             _isLockedOut = false;
-            _startContentIds = startContentIds;
-            _startMediaIds = startMediaIds;
+            _startContentNodes = startContentNodes;
+            _startMediaNodes = startMediaNodes;
         }
 
         private string _name;
         private string _securityStamp;
         private string _avatar;
         private int _sessionTimeout;
-        private int[] _startContentIds;
-        private int[] _startMediaIds;
+        private IEnumerable<StartNode> _startContentNodes;
+        private IEnumerable<StartNode> _startMediaNodes;
         private int _failedLoginAttempts;
 
         private string _username;
@@ -133,8 +134,8 @@ namespace Umbraco.Core.Models.Membership
             public readonly PropertyInfo SecurityStampSelector = ExpressionHelper.GetPropertyInfo<User, string>(x => x.SecurityStamp);
             public readonly PropertyInfo AvatarSelector = ExpressionHelper.GetPropertyInfo<User, string>(x => x.Avatar);
             public readonly PropertyInfo SessionTimeoutSelector = ExpressionHelper.GetPropertyInfo<User, int>(x => x.SessionTimeout);
-            public readonly PropertyInfo StartContentIdSelector = ExpressionHelper.GetPropertyInfo<User, int[]>(x => x.StartContentIds);
-            public readonly PropertyInfo StartMediaIdSelector = ExpressionHelper.GetPropertyInfo<User, int[]>(x => x.StartMediaIds);
+            public readonly PropertyInfo StartContentNodesSelector = ExpressionHelper.GetPropertyInfo<User, IEnumerable<StartNode>>(x => x.StartContentNodes);
+            public readonly PropertyInfo StartMediaNodesSelector = ExpressionHelper.GetPropertyInfo<User, IEnumerable<StartNode>>(x => x.StartMediaNodes);
             public readonly PropertyInfo NameSelector = ExpressionHelper.GetPropertyInfo<User, string>(x => x.Name);
 
             public readonly PropertyInfo UsernameSelector = ExpressionHelper.GetPropertyInfo<User, string>(x => x.Username);
@@ -155,6 +156,9 @@ namespace Umbraco.Core.Models.Membership
                 new DelegateEqualityComparer<IEnumerable<int>>(
                     (enum1, enum2) => enum1.UnsortedSequenceEqual(enum2),
                     enum1 => enum1.GetHashCode());
+            public readonly DelegateEqualityComparer<IEnumerable<StartNode>> StartNodesComparer = new DelegateEqualityComparer<IEnumerable<StartNode>>(
+                (groups, enumerable) => groups.Select(x => x.Id).UnsortedSequenceEqual(enumerable.Select(x => x.Id)),
+                groups => groups.GetHashCode());
         }
         
         #region Implementation of IMembershipUser
@@ -476,31 +480,56 @@ namespace Umbraco.Core.Models.Membership
         }
 
         /// <summary>
-        /// Gets or sets the start content id.
+        /// Gets or sets the start content nodes.
         /// </summary>
         /// <value>
-        /// The start content id.
+        /// The start content nodes.
         /// </value>
         [DataMember]
         [DoNotClone]
-        public int[] StartContentIds
+        public IEnumerable<StartNode> StartContentNodes
         {
-            get { return _startContentIds; }
-            set { SetPropertyValueAndDetectChanges(value, ref _startContentIds, Ps.Value.StartContentIdSelector, Ps.Value.IntegerEnumerableComparer); }
+            get { return _startContentNodes; }
+            set { SetPropertyValueAndDetectChanges(value, ref _startContentNodes, Ps.Value.StartContentNodesSelector, Ps.Value.StartNodesComparer); }
         }
 
         /// <summary>
-        /// Gets or sets the start media id.
+        /// Gets or sets the start content node ids.
         /// </summary>
         /// <value>
-        /// The start media id.
+        /// The start content node ids.
+        /// </value>
+        [DoNotClone]
+        public int[] StartContentIds
+        {
+            get { return _startContentNodes.Select(x => x.Id).ToArray(); }
+        }
+
+        /// <summary>
+        /// Gets or sets the start media nodes.
+        /// </summary>
+        /// <value>
+        /// The start media nodes.
+        /// </value>
+        [DataMember]
+        [DoNotClone]
+        public IEnumerable<StartNode> StartMediaNodes
+        {
+            get { return _startMediaNodes; }
+            set { SetPropertyValueAndDetectChanges(value, ref _startMediaNodes, Ps.Value.StartContentNodesSelector, Ps.Value.StartNodesComparer); }
+        }
+
+        /// <summary>
+        /// Gets or sets the start media node ids.
+        /// </summary>
+        /// <value>
+        /// The start media node ids.
         /// </value>
         [DataMember]
         [DoNotClone]
         public int[] StartMediaIds
         {
-            get { return _startMediaIds; }
-            set { SetPropertyValueAndDetectChanges(value, ref _startMediaIds, Ps.Value.StartMediaIdSelector, Ps.Value.IntegerEnumerableComparer); }
+            get { return _startMediaNodes.Select(x => x.Id).ToArray(); }
         }
 
         [DataMember]
@@ -589,8 +618,8 @@ namespace Umbraco.Core.Models.Membership
             //turn off change tracking
             clone.DisableChangeTracking();
             //manually clone the start node props
-            clone._startContentIds = _startContentIds.ToArray();
-            clone._startMediaIds = _startMediaIds.ToArray();
+            clone._startContentNodes = _startContentNodes.ToArray();
+            clone._startMediaNodes = _startMediaNodes.ToArray();
 
             // this value has been cloned and points to the same object
             // which obviously is bad - needs to point to a new object

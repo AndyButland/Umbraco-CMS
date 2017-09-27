@@ -51,8 +51,8 @@ namespace Umbraco.Core.Models.Identity
         /// <param name="groups"></param>
         public BackOfficeIdentityUser(int userId, IEnumerable<IReadOnlyUserGroup> groups)
         {
-            _startMediaIds = new int[] { };
-            _startContentIds = new int[] { };
+            _startMediaNodes = new List<StartNode>();
+            _startContentNodes = new List<StartNode>();
             _groups = new IReadOnlyUserGroup[] { };
             _allowedSections = new string[] { };
             _culture = Configuration.GlobalSettings.DefaultUILanguage;
@@ -161,27 +161,43 @@ namespace Umbraco.Core.Models.Identity
         /// <summary>
         /// Content start nodes assigned to the User (not ones assigned to the user's groups)
         /// </summary>
-        public int[] StartContentIds
+        public IEnumerable<StartNode> StartContentNodes
         {
-            get { return _startContentIds; }
+            get { return _startContentNodes; }
             set
             {
-                if (value == null) value = new int[0];
-                _tracker.SetPropertyValueAndDetectChanges(value, ref _startContentIds, Ps.Value.StartContentIdsSelector, Ps.Value.StartIdsComparer);
+                if (value == null) value = Enumerable.Empty<StartNode>();
+                _tracker.SetPropertyValueAndDetectChanges(value, ref _startContentNodes, Ps.Value.StartContentNodeSelector, Ps.Value.StartNodesComparer);
             }
+        }
+
+        /// <summary>
+        /// Content start node Ids assigned to the User (not ones assigned to the user's groups)
+        /// </summary>
+        public int[] StartContentIds
+        {
+            get { return _startContentNodes.Select(x => x.Id).ToArray(); }
         }
 
         /// <summary>
         /// Media start nodes assigned to the User (not ones assigned to the user's groups)
         /// </summary>
-        public int[] StartMediaIds
+        public IEnumerable<StartNode> StartMediaNodes
         {
-            get { return _startMediaIds; }
+            get { return _startMediaNodes; }
             set
             {
-                if (value == null) value = new int[0];
-                _tracker.SetPropertyValueAndDetectChanges(value, ref _startMediaIds, Ps.Value.StartMediaIdsSelector, Ps.Value.StartIdsComparer);
+                if (value == null) value = Enumerable.Empty<StartNode>();
+                _tracker.SetPropertyValueAndDetectChanges(value, ref _startMediaNodes, Ps.Value.StartMediaNodesSelector, Ps.Value.StartNodesComparer);
             }
+        }
+
+        /// <summary>
+        /// Media start node Ids assigned to the User (not ones assigned to the user's groups)
+        /// </summary>
+        public int[] StartMediaIds
+        {
+            get { return _startMediaNodes.Select(x => x.Id).ToArray(); }
         }
 
         /// <summary>
@@ -384,8 +400,8 @@ namespace Umbraco.Core.Models.Identity
             public readonly PropertyInfo AccessFailedCountSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, int>(x => x.AccessFailedCount);
             public readonly PropertyInfo PasswordHashSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, string>(x => x.PasswordHash);
             public readonly PropertyInfo CultureSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, string>(x => x.Culture);
-            public readonly PropertyInfo StartMediaIdsSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, int[]>(x => x.StartMediaIds);
-            public readonly PropertyInfo StartContentIdsSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, int[]>(x => x.StartContentIds);
+            public readonly PropertyInfo StartContentNodeSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, IEnumerable<StartNode>>(x => x.StartContentNodes);
+            public readonly PropertyInfo StartMediaNodesSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, IEnumerable<StartNode>>(x => x.StartMediaNodes);
             public readonly PropertyInfo GroupsSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, IReadOnlyUserGroup[]>(x => x.Groups);
             public readonly PropertyInfo LoginsSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, IEnumerable<IIdentityUserLogin>>(x => x.Logins);
             public readonly PropertyInfo RolesSelector = ExpressionHelper.GetPropertyInfo<BackOfficeIdentityUser, IEnumerable<IdentityUserRole<string>>>(x => x.Roles);
@@ -394,8 +410,8 @@ namespace Umbraco.Core.Models.Identity
             public readonly DelegateEqualityComparer<IReadOnlyUserGroup[]> GroupsComparer = new DelegateEqualityComparer<IReadOnlyUserGroup[]>(
                 (groups, enumerable) => groups.Select(x => x.Alias).UnsortedSequenceEqual(enumerable.Select(x => x.Alias)),
                 groups => groups.GetHashCode());
-            public readonly DelegateEqualityComparer<int[]> StartIdsComparer = new DelegateEqualityComparer<int[]>(
-                (groups, enumerable) => groups.UnsortedSequenceEqual(enumerable),
+            public readonly DelegateEqualityComparer<IEnumerable<StartNode>> StartNodesComparer = new DelegateEqualityComparer<IEnumerable<StartNode>>(
+                (groups, enumerable) => groups.Select(x => x.Id).UnsortedSequenceEqual(enumerable.Select(x => x.Id)),
                 groups => groups.GetHashCode());
 
         }
@@ -415,8 +431,8 @@ namespace Umbraco.Core.Models.Identity
         private Lazy<IEnumerable<IIdentityUserLogin>> _getLogins;
         private IReadOnlyUserGroup[] _groups;
         private string[] _allowedSections;
-        private int[] _startMediaIds;
-        private int[] _startContentIds;
+        private IEnumerable<StartNode> _startContentNodes;
+        private IEnumerable<StartNode> _startMediaNodes;
 
         /// <summary>
         /// internal class used to track changes for properties that have it enabled

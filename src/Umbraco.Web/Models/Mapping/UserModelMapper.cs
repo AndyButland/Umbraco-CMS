@@ -229,8 +229,8 @@ namespace Umbraco.Web.Models.Mapping
                 .ForMember(detail => detail.Username, opt => opt.MapFrom(user => user.Username))
                 .ForMember(detail => detail.LastLoginDate, opt => opt.MapFrom(user => user.LastLoginDate == default(DateTime) ? null : (DateTime?) user.LastLoginDate))
                 .ForMember(detail => detail.UserGroups, opt => opt.MapFrom(user => user.Groups))
-                .ForMember(detail => detail.StartContentIds, opt => opt.UseValue(Enumerable.Empty<EntityBasic>()))
-                .ForMember(detail => detail.StartMediaIds, opt => opt.UseValue(Enumerable.Empty<EntityBasic>()))
+                .ForMember(detail => detail.StartContentNodes, opt => opt.UseValue(Enumerable.Empty<EntityBasic>()))
+                .ForMember(detail => detail.StartMediaNodes, opt => opt.UseValue(Enumerable.Empty<EntityBasic>()))
                 .ForMember(detail => detail.Culture, opt => opt.MapFrom(user => user.GetUserCulture(applicationContext.Services.TextService)))                
                 .ForMember(
                     detail => detail.AvailableCultures,
@@ -263,23 +263,26 @@ namespace Umbraco.Web.Models.Mapping
                         {
                             startNodes.Add(RootNode(applicationContext.Services.TextService.Localize("content/contentRoot")));
                         }
+
                         var contentItems = applicationContext.Services.EntityService.GetAll(UmbracoObjectTypes.Document, startContentIds);
-                        startNodes.AddRange(Mapper.Map<IEnumerable<IUmbracoEntity>, IEnumerable<EntityBasic>>(contentItems));                        
-                        display.StartContentIds = startNodes;
-
-
+                        startNodes.AddRange(Mapper.Map<IEnumerable<IUmbracoEntity>, IEnumerable<EntityBasic>>(contentItems));
+                        ApplyStartNodeLabels(startNodes, user.StartContentNodes);
+                        display.StartContentNodes = startNodes;
                     }
+
                     var startMediaIds = user.StartMediaIds.ToArray();
                     if (startMediaIds.Length > 0)
                     {
                         var startNodes = new List<EntityBasic>();
-                        if (startContentIds.Contains(-1))
+                        if (startMediaIds.Contains(-1))
                         {
                             startNodes.Add(RootNode(applicationContext.Services.TextService.Localize("media/mediaRoot")));
                         }
+
                         var mediaItems = applicationContext.Services.EntityService.GetAll(UmbracoObjectTypes.Media, startMediaIds);
                         startNodes.AddRange(Mapper.Map<IEnumerable<IUmbracoEntity>, IEnumerable<EntityBasic>>(mediaItems));
-                        display.StartMediaIds = startNodes;
+                        ApplyStartNodeLabels(startNodes, user.StartMediaNodes);
+                        display.StartMediaNodes = startNodes;
                     }
                 });
 
@@ -418,7 +421,19 @@ namespace Umbraco.Web.Models.Mapping
                     "Cannot convert the profile to a " + typeof(UserDetail).Name + " object since the id is not an integer");
             }
             return result.Result;
-        } 
- 
+        }
+
+        private static void ApplyStartNodeLabels(List<EntityBasic> mappedStartNodes, IEnumerable<StartNode> userStartNodes)
+        {
+            var userStartNodesArray = userStartNodes.ToArray();
+            foreach (var startNode in mappedStartNodes)
+            {
+                var userStartNode = userStartNodesArray.Single(x => x.Id == (int)startNode.Id);
+                if (string.IsNullOrWhiteSpace(userStartNode.Label) == false)
+                {
+                    startNode.AdditionalData.Add(new KeyValuePair<string, object>("Label", userStartNode.Label));
+                }
+            }
+        }
     }
 }

@@ -108,15 +108,16 @@
 
                                         <umb-node-preview
                                             style="max-width: 100%;"
-                                            ng-repeat="node in vm.user.startContentIds"
+                                            ng-repeat="node in vm.user.startContentNodes"
                                             icon="node.icon"
                                             name="node.name"
+                                            allow-label-edit="true"
                                             allow-remove="!vm.user.isCurrentUser"
-                                            on-remove="vm.removeSelectedItem($index, vm.user.startContentIds)">
+                                            on-remove="vm.removeSelectedItem($index, vm.user.startContentNodes)">
                                         </umb-node-preview>
 
                                         <umb-node-preview
-                                            ng-if="vm.user.startContentIds.length === 0 && vm.user.isCurrentUser"
+                                            ng-if="vm.user.startContentNodes.length === 0 && vm.user.isCurrentUser"
                                             style="max-width: 100%;"
                                             name="vm.labels.noStartNodes">
                                         </umb-node-preview>
@@ -136,15 +137,16 @@
 
                                         <umb-node-preview
                                             style="max-width: 100%;"
-                                            ng-repeat="node in vm.user.startMediaIds"
+                                            ng-repeat="node in vm.user.startMediaNodes"
                                             icon="node.icon"
                                             name="node.name"
+                                            allow-label-edit="true"
                                             allow-remove="!vm.user.isCurrentUser"
-                                            on-remove="vm.removeSelectedItem($index, vm.user.startMediaIds)">
+                                            on-remove="vm.removeSelectedItem($index, vm.user.startMediaNodes)">
                                         </umb-node-preview>
 
                                         <umb-node-preview
-                                            ng-if="vm.user.startMediaIds.length === 0 && vm.user.isCurrentUser"
+                                            ng-if="vm.user.startMediaNodes.length === 0 && vm.user.isCurrentUser"
                                             style="max-width: 100%;"
                                             name="vm.labels.noStartNodes">
                                         </umb-node-preview>

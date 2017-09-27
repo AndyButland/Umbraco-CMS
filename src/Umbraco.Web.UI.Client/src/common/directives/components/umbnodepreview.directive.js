@@ -80,6 +80,7 @@
 @param {boolean} published (<code>binding</code>): The node pusblished state.
 @param {string} description (<code>binding</code>): A short description.
 @param {boolean} sortable (<code>binding</code>): Will add a move cursor on the node preview. Can used in combination with ui-sortable.
+@param {boolean} allowLabelEdit (<code>binding</code>): Show/Hide the text box where a label associated with the node can be edited.
 @param {boolean} allowRemove (<code>binding</code>): Show/Hide the remove button.
 @param {boolean} allowOpen (<code>binding</code>): Show/Hide the open button.
 @param {boolean} allowEdit (<code>binding</code>): Show/Hide the edit button (Added in version 7.7.0).
@@ -110,6 +111,7 @@
                 permissions: "=?",
                 published: "=?",
                 sortable: "=?",
+                allowLabelEdit: "=?",
                 allowOpen: "=?",
                 allowRemove: "=?",
                 allowEdit: "=?",

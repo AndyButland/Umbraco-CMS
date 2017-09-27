@@ -363,6 +363,7 @@
     <Compile Include="Models\Membership\IReadOnlyUserGroup.cs" />
     <Compile Include="Models\Membership\IUserType.cs" />
     <Compile Include="Models\Membership\ReadOnlyUserGroup.cs" />
+    <Compile Include="Models\Membership\StartNode.cs" />
     <Compile Include="Models\Membership\UserGroupExtensions.cs" />
     <Compile Include="Models\Membership\UserProfile.cs" />
     <Compile Include="Models\Membership\UserState.cs" />

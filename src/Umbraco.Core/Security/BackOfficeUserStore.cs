@@ -86,8 +86,8 @@ namespace Umbraco.Core.Security
             {
                 DefaultToLiveEditing = false,
                 Language = user.Culture ?? Configuration.GlobalSettings.DefaultUILanguage,
-                StartContentIds = user.StartContentIds ?? new int[] { },
-                StartMediaIds = user.StartMediaIds ?? new int[] { },
+                StartContentNodes = user.StartContentNodes ?? new List<StartNode>(),
+                StartMediaNodes = user.StartMediaNodes ?? new List<StartNode>(),
                 IsLockedOut = user.IsLockedOut,
             };
 
@@ -681,17 +681,17 @@ namespace Umbraco.Core.Security
                 anythingChanged = true;
                 user.Language = identityUser.Culture;
             }
-            if (identityUser.IsPropertyDirty("StartMediaIds")
-                && user.StartMediaIds.UnsortedSequenceEqual(identityUser.StartMediaIds) == false)
-            {
-                anythingChanged = true;
-                user.StartMediaIds = identityUser.StartMediaIds;
-            }
-            if (identityUser.IsPropertyDirty("StartContentIds")
+            if (identityUser.IsPropertyDirty("StartContentNodes")
                 && user.StartContentIds.UnsortedSequenceEqual(identityUser.StartContentIds) == false)
             {
                 anythingChanged = true;
-                user.StartContentIds = identityUser.StartContentIds;
+                user.StartContentNodes = identityUser.StartContentNodes;
+            }
+            if (identityUser.IsPropertyDirty("StartMediaNodes")
+                && user.StartMediaIds.UnsortedSequenceEqual(identityUser.StartMediaIds) == false)
+            {
+                anythingChanged = true;
+                user.StartMediaNodes = identityUser.StartMediaNodes;
             }
             if (user.SecurityStamp != identityUser.SecurityStamp)
             {

@@ -716,10 +716,6 @@ namespace umbraco.BusinessLogic
                 if (_lazyId.HasValue) SetupUser(_lazyId.Value);
                 return UserEntity.StartContentIds == null || UserEntity.StartContentIds.Length == 0 ? -1 : UserEntity.StartContentIds[0];
             }
-            set
-            {
-                UserEntity.StartContentIds = new int[] { value };
-            }
         }
 
         [Obsolete("This should not be used, it will return invalid data because a user can have multiple start nodes, this will only return the first")]
@@ -729,10 +725,6 @@ namespace umbraco.BusinessLogic
             {
                 if (_lazyId.HasValue) SetupUser(_lazyId.Value);
                 return UserEntity.StartMediaIds == null || UserEntity.StartMediaIds.Length == 0 ? -1 : UserEntity.StartMediaIds[0];
-            }
-            set
-            {
-                UserEntity.StartMediaIds = new int[] { value };
             }
         }
 

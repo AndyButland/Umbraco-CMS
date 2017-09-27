@@ -149,11 +149,11 @@ function umbTreeDirective($compile, $log, $q, $rootScope, treeService, notificat
                             userService.getCurrentUser().then(function (userData) {
 
                                 var startNodes = [];
-                                for (var i = 0; i < userData.startContentIds; i++) {
-                                    startNodes.push(userData.startContentIds[i]);
+                                for (var i = 0; i < userData.startContentNodes; i++) {
+                                    startNodes.push(userData.startContentNodes[i]);
                                 }
-                                for (var j = 0; j < userData.startMediaIds; j++) {
-                                    startNodes.push(userData.startMediaIds[j]);
+                                for (var j = 0; j < userData.startMediaNodes; j++) {
+                                    startNodes.push(userData.startMediaNodes[j]);
                                 }
 
                                 _.each(startNodes, function (i) {

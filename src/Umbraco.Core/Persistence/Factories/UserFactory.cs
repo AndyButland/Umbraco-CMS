@@ -15,8 +15,8 @@ namespace Umbraco.Core.Persistence.Factories
             
             var user = new User(dto.Id, dto.UserName, dto.Email, dto.Login,dto.Password, 
                 dto.UserGroupDtos.Select(x => x.ToReadOnlyGroup()).ToArray(),
-                dto.UserStartNodeDtos.Where(x => x.StartNodeType == (int)UserStartNodeDto.StartNodeTypeValue.Content).Select(x => x.StartNode).ToArray(),
-                dto.UserStartNodeDtos.Where(x => x.StartNodeType == (int)UserStartNodeDto.StartNodeTypeValue.Media).Select(x => x.StartNode).ToArray());
+                dto.UserStartNodeDtos.Where(x => x.StartNodeType == (int)UserStartNodeDto.StartNodeTypeValue.Content).Select(x => new StartNode(x.StartNode, x.StartNodeLabel)),
+                dto.UserStartNodeDtos.Where(x => x.StartNodeType == (int)UserStartNodeDto.StartNodeTypeValue.Media).Select(x => new StartNode(x.StartNode, x.StartNodeLabel)));
 
             try
             {
