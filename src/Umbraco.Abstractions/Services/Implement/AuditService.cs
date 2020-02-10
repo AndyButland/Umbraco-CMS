@@ -4,8 +4,6 @@ using System.Linq;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
-using Umbraco.Core.Persistence.DatabaseModelDefinitions;
-using Umbraco.Core.Persistence.Dtos;
 using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.Scoping;
@@ -165,17 +163,17 @@ namespace Umbraco.Core.Services.Implement
             if (string.IsNullOrWhiteSpace(eventDetails)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(eventDetails));
 
             //we need to truncate the data else we'll get SQL errors
-            affectedDetails = affectedDetails?.Substring(0, Math.Min(affectedDetails.Length, AuditEntryDto.DetailsLength));
-            eventDetails = eventDetails.Substring(0, Math.Min(eventDetails.Length, AuditEntryDto.DetailsLength));
+            affectedDetails = affectedDetails?.Substring(0, Math.Min(affectedDetails.Length, AuditEntry.DetailsLength));
+            eventDetails = eventDetails.Substring(0, Math.Min(eventDetails.Length, AuditEntry.DetailsLength));
 
             //validate the eventType - must contain a forward slash, no spaces, no special chars
             var eventTypeParts = eventType.ToCharArray();
             if (eventTypeParts.Contains('/') == false || eventTypeParts.All(c => char.IsLetterOrDigit(c) || c == '/' || c == '-') == false)
                 throw new ArgumentException(nameof(eventType) + " must contain only alphanumeric characters, hyphens and at least one '/' defining a category");
-            if (eventType.Length > AuditEntryDto.EventTypeLength)
-                throw new ArgumentException($"Must be max {AuditEntryDto.EventTypeLength} chars.", nameof(eventType));
-            if (performingIp != null && performingIp.Length > AuditEntryDto.IpLength)
-                throw new ArgumentException($"Must be max {AuditEntryDto.EventTypeLength} chars.", nameof(performingIp));
+            if (eventType.Length > AuditEntry.EventTypeLength)
+                throw new ArgumentException($"Must be max {AuditEntry.EventTypeLength} chars.", nameof(eventType));
+            if (performingIp != null && performingIp.Length > AuditEntry.IpLength)
+                throw new ArgumentException($"Must be max {AuditEntry.EventTypeLength} chars.", nameof(performingIp));
 
             var entry = new AuditEntry
             {

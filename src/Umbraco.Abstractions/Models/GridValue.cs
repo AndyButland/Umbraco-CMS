@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -12,75 +13,75 @@ namespace Umbraco.Core.Models
     /// </summary>
     public class GridValue
     {
-        [JsonProperty("name")]
+        [DataMember(Name = "name")]
         public string Name { get; set; }
 
-        [JsonProperty("sections")]
+        [DataMember(Name = "sections")]
         public IEnumerable<GridSection> Sections { get; set; }
 
         public class GridSection
         {
-            [JsonProperty("grid")]
+            [DataMember(Name = "grid")]
             public string Grid { get; set; } // TODO: what is this?
 
-            [JsonProperty("rows")]
+            [DataMember(Name = "rows")]
             public IEnumerable<GridRow> Rows { get; set; }
         }
 
         public class GridRow
         {
-            [JsonProperty("name")]
+            [DataMember(Name = "name")]
             public string Name { get; set; }
 
-            [JsonProperty("id")]
+            [DataMember(Name = "id")]
             public Guid Id { get; set; }
 
-            [JsonProperty("areas")]
+            [DataMember(Name = "areas")]
             public IEnumerable<GridArea> Areas { get; set; }
 
-            [JsonProperty("styles")]
+            [DataMember(Name = "styles")]
             public JToken Styles { get; set; }
 
-            [JsonProperty("config")]
+            [DataMember(Name = "config")]
             public JToken Config { get; set; }
         }
 
         public class GridArea
         {
-            [JsonProperty("grid")]
+            [DataMember(Name = "grid")]
             public string Grid { get; set; } // TODO: what is this?
 
-            [JsonProperty("controls")]
+            [DataMember(Name = "controls")]
             public IEnumerable<GridControl> Controls { get; set; }
 
-            [JsonProperty("styles")]
+            [DataMember(Name = "styles")]
             public JToken Styles { get; set; }
 
-            [JsonProperty("config")]
+            [DataMember(Name = "config")]
             public JToken Config { get; set; }
         }
 
         public class GridControl
         {
-            [JsonProperty("value")]
+            [DataMember(Name = "value")]
             public JToken Value { get; set; }
 
-            [JsonProperty("editor")]
+            [DataMember(Name = "editor")]
             public GridEditor Editor { get; set; }
 
-            [JsonProperty("styles")]
+            [DataMember(Name = "styles")]
             public JToken Styles { get; set; }
 
-            [JsonProperty("config")]
+            [DataMember(Name = "config")]
             public JToken Config { get; set; }
         }
 
         public class GridEditor
         {
-            [JsonProperty("alias")]
+            [DataMember(Name = "alias")]
             public string Alias { get; set; }
 
-            [JsonProperty("view")]
+            [DataMember(Name = "view")]
             public string View { get; set; }
         }
     }

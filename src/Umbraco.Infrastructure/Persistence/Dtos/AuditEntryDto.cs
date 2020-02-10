@@ -1,5 +1,6 @@
 ﻿using System;
 using NPoco;
+using Umbraco.Core.Models;
 using Umbraco.Core.Persistence.DatabaseAnnotations;
 using Umbraco.Core.Persistence.DatabaseModelDefinitions;
 
@@ -10,10 +11,6 @@ namespace Umbraco.Core.Persistence.Dtos
     [ExplicitColumns]
     internal class AuditEntryDto
     {
-        public const int IpLength = 64;
-        public const int EventTypeLength = 256;
-        public const int DetailsLength = 1024;
-
         [Column("id")]
         [PrimaryKeyColumn]
         public int Id { get; set; }
@@ -27,12 +24,12 @@ namespace Umbraco.Core.Persistence.Dtos
 
         [Column("performingDetails")]
         [NullSetting(NullSetting = NullSettings.Null)]
-        [Length(DetailsLength)]
+        [Length(AuditEntry.DetailsLength)]
         public string PerformingDetails { get; set; }
 
         [Column("performingIp")]
         [NullSetting(NullSetting = NullSettings.Null)]
-        [Length(IpLength)]
+        [Length(AuditEntry.IpLength)]
         public string PerformingIp { get; set; }
 
         [Column("eventDateUtc")]
@@ -44,16 +41,16 @@ namespace Umbraco.Core.Persistence.Dtos
 
         [Column("affectedDetails")]
         [NullSetting(NullSetting = NullSettings.Null)]
-        [Length(DetailsLength)]
+        [Length(AuditEntry.DetailsLength)]
         public string AffectedDetails { get; set; }
 
         [Column("eventType")]
-        [Length(EventTypeLength)]
+        [Length(AuditEntry.EventTypeLength)]
         public string EventType { get; set; }
 
         [Column("eventDetails")]
         [NullSetting(NullSetting = NullSettings.Null)]
-        [Length(DetailsLength)]
+        [Length(AuditEntry.DetailsLength)]
         public string EventDetails { get; set; }
     }
 }

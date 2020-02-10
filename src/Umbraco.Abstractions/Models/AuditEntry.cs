@@ -11,6 +11,10 @@ namespace Umbraco.Core.Models
     [DataContract(IsReference = true)]
     public class AuditEntry : EntityBase, IAuditEntry
     {
+        public const int IpLength = 64;
+        public const int EventTypeLength = 256;
+        public const int DetailsLength = 1024;
+
         private int _performingUserId;
         private string _performingDetails;
         private string _performingIp;
