@@ -242,13 +242,18 @@ namespace Umbraco.Core.Persistence.Repositories.Implement
 
         public UmbracoObjectTypes GetObjectType(int id)
         {
-            var sql = Sql().Select<NodeDto>(x => x.NodeObjectType).From<NodeDto>().Where<NodeDto>(x => x.NodeId == id);
+            var sql = Sql()
+                .Select<NodeDto>(x => x.NodeObjectType)
+                .From<NodeDto>()
+                .Where<NodeDto>(x => x.NodeId == id);
             return ObjectTypes.GetUmbracoObjectType(Database.ExecuteScalar<Guid>(sql));
         }
 
         public UmbracoObjectTypes GetObjectType(Guid key)
         {
-            var sql = Sql().Select<NodeDto>(x => x.NodeObjectType).From<NodeDto>().Where<NodeDto>(x => x.UniqueId == key);
+            var sql = Sql()
+                .Select<NodeDto>(x => x.NodeObjectType)
+                .From<NodeDto>().Where<NodeDto>(x => x.UniqueId == key);
             return ObjectTypes.GetUmbracoObjectType(Database.ExecuteScalar<Guid>(sql));
         }
 
@@ -693,5 +698,26 @@ namespace Umbraco.Core.Persistence.Repositories.Implement
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public int ReserveId(Guid key)
+        {
+            var node = new NodeDto
+            {
+                UniqueId = key,
+                Text = "RESERVED.ID",
+                NodeObjectType = Constants.ObjectTypes.IdReservation,
+                CreateDate = DateTime.Now,
+                UserId = null,
+                ParentId = -1,
+                Level = 1,
+                Path = "-1",
+                SortOrder = 0,
+                Trashed = false
+            };
+
+            Database.Insert(node);
+            return node.NodeId;
+        }
     }
 }

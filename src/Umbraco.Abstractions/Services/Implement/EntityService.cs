@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Umbraco.Core;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.Entities;
-using Umbraco.Core.Persistence;
-using Umbraco.Core.Persistence.Dtos;
 using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.Scoping;
@@ -328,7 +327,7 @@ namespace Umbraco.Core.Services.Implement
                         return Enumerable.Empty<IEntitySlim>();
                     }
                     var path = paths[0].Path;
-                    query.Where(x => x.Path.SqlStartsWith(path + ",", TextColumnType.NVarchar));
+                    query.Where(x => x.Path.InvariantStartsWith(path + ","));
                 }
 
                 return _entityRepository.GetPagedResultsByQuery(query, objectTypeGuid, pageIndex, pageSize, out totalRecords, filter, ordering);
@@ -369,7 +368,7 @@ namespace Umbraco.Core.Services.Implement
 
                         var path = entityPath.Path;
                         var qid = id;
-                        clauses.Add(x => x.Path.SqlStartsWith(path + ",", TextColumnType.NVarchar) || x.Path.SqlEndsWith("," + qid, TextColumnType.NVarchar));
+                        clauses.Add(x => x.Path.InvariantStartsWith(path + ",") || x.Path.InvariantEndsWith("," + qid));
                     }
                     query.WhereAny(clauses);
                 }
@@ -397,13 +396,7 @@ namespace Umbraco.Core.Services.Implement
         {
             using (var scope = ScopeProvider.CreateScope(autoComplete: true))
             {
-                var sql = scope.SqlContext.Sql()
-                    .Select<NodeDto>(x => x.NodeObjectType)
-                    .From<NodeDto>()
-                    .Where<NodeDto>(x => x.NodeId == id);
-
-                var guid = scope.Database.ExecuteScalar<Guid>(sql);
-                return ObjectTypes.GetUmbracoObjectType(guid);
+                return _entityRepository.GetObjectType(id);
             }
         }
 
@@ -412,13 +405,7 @@ namespace Umbraco.Core.Services.Implement
         {
             using (var scope = ScopeProvider.CreateScope(autoComplete: true))
             {
-                var sql = scope.SqlContext.Sql()
-                    .Select<NodeDto>(x => x.NodeObjectType)
-                    .From<NodeDto>()
-                    .Where<NodeDto>(x => x.UniqueId == key);
-
-                var guid = scope.Database.ExecuteScalar<Guid>(sql);
-                return ObjectTypes.GetUmbracoObjectType(guid);
+                return _entityRepository.GetObjectType(key);
             }
         }
 
@@ -482,36 +469,14 @@ namespace Umbraco.Core.Services.Implement
         /// <inheritdoc />
         public int ReserveId(Guid key)
         {
-            NodeDto node;
-            using (var scope = ScopeProvider.CreateScope())
+            using (var scope = ScopeProvider.CreateScope(autoComplete: true))
             {
-                var sql = scope.SqlContext.Sql()
-                    .Select<NodeDto>()
-                    .From<NodeDto>()
-                    .Where<NodeDto>(x => x.UniqueId == key && x.NodeObjectType == Constants.ObjectTypes.IdReservation);
-
-                node = scope.Database.SingleOrDefault<NodeDto>(sql);
+                var node = _entityRepository.Get(key, Constants.ObjectTypes.IdReservation);
                 if (node != null)
                     throw new InvalidOperationException("An identifier has already been reserved for this Udi.");
 
-                node = new NodeDto
-                {
-                    UniqueId = key,
-                    Text = "RESERVED.ID",
-                    NodeObjectType = Constants.ObjectTypes.IdReservation,
-
-                    CreateDate = DateTime.Now,
-                    UserId = null,
-                    ParentId = -1,
-                    Level = 1,
-                    Path = "-1",
-                    SortOrder = 0,
-                    Trashed = false
-                };
-                scope.Database.Insert(node);
-                scope.Complete();
+                return _entityRepository.ReserveId(key);
             }
-            return node.NodeId;
         }
     }
 }

@@ -76,6 +76,12 @@ namespace Umbraco.Core.Persistence.Repositories
         IEnumerable<IEntitySlim> GetPagedResultsByQuery(IQuery<IUmbracoEntity> query, Guid objectType, long pageIndex, int pageSize, out long totalRecords,
             IQuery<IUmbracoEntity> filter, Ordering ordering);
 
-        
+        /// <summary>
+        /// Reserves an identifier for a key validated to not already exist.
+        /// </summary>
+        /// <param name="key">They key.</param>
+        /// <returns>The identifier.</returns>
+        /// <remarks>When a new content or a media is saved with the key, it will have the reserved identifier.</remarks>
+        int ReserveId(Guid key);        
     }
 }
