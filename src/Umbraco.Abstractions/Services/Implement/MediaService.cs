@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,6 @@ using Umbraco.Core.Events;
 using Umbraco.Core.IO;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
-using Umbraco.Core.Persistence.DatabaseModelDefinitions;
 using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Persistence.Repositories;
 using Umbraco.Core.Scoping;
@@ -545,7 +543,7 @@ namespace Umbraco.Core.Services.Implement
 
             var query = Query<IMedia>();
             if (!mediaPath.IsNullOrWhiteSpace())
-                query.Where(x => x.Path.SqlStartsWith(mediaPath + ",", TextColumnType.NVarchar));
+                query.Where(x => x.Path.InvariantStartsWith(mediaPath + ","));
 
             return _mediaRepository.GetPage(query, pageIndex, pageSize, out totalChildren, filter, ordering);
         }

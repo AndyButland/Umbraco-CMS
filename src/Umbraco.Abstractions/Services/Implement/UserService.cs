@@ -46,7 +46,7 @@ namespace Umbraco.Core.Services.Implement
         {
             using (var scope = ScopeProvider.CreateScope(autoComplete: true))
             {
-                return _userRepository.Exists(username);
+                return _userRepository.UsernameExists(username);
             }
         }
 
@@ -109,9 +109,9 @@ namespace Umbraco.Core.Services.Implement
             User user;
             using (var scope = ScopeProvider.CreateScope())
             {
-                var loginExists = scope.Database.ExecuteScalar<int>("SELECT COUNT(id) FROM umbracoUser WHERE userLogin = @Login", new { Login = username }) != 0;
+                var loginExists = _userRepository.LoginExists(username);
                 if (loginExists)
-                    throw new ArgumentException("Login already exists"); // causes rollback // causes rollback
+                    throw new ArgumentException("Login already exists"); // causes rollback
 
                 user = new User(_globalSettings)
                 {
@@ -403,7 +403,7 @@ namespace Umbraco.Core.Services.Implement
                         query.Where(member => member.Email.EndsWith(emailStringToMatch));
                         break;
                     case StringPropertyMatchType.Wildcard:
-                        query.Where(member => member.Email.SqlWildcard(emailStringToMatch, TextColumnType.NVarchar));
+                        query.Where(member => member.Email.MatchesWildcard(emailStringToMatch));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(matchType));
@@ -443,7 +443,7 @@ namespace Umbraco.Core.Services.Implement
                         query.Where(member => member.Username.EndsWith(login));
                         break;
                     case StringPropertyMatchType.Wildcard:
-                        query.Where(member => member.Email.SqlWildcard(login, TextColumnType.NVarchar));
+                        query.Where(member => member.Email.MatchesWildcard(login));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(matchType));
@@ -607,7 +607,7 @@ namespace Umbraco.Core.Services.Implement
         {
             using (var scope = ScopeProvider.CreateScope(autoComplete: true))
             {
-                return ((UserRepository) _userRepository).GetNextUsers(id, count);
+                return _userRepository.GetNextUsers(id, count);
             }
         }
 
@@ -772,7 +772,7 @@ namespace Umbraco.Core.Services.Implement
 
             using (var scope = ScopeProvider.CreateScope(autoComplete: true))
             {
-                var query = Query<IUserGroup>().Where(x => aliases.SqlIn(x.Alias));
+                var query = Query<IUserGroup>().Where(x => aliases.Contains(x.Alias));
                 var contents = _userGroupRepository.Get(query);
                 return contents.WhereNotNull().ToArray();
             }

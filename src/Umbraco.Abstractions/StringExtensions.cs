@@ -562,6 +562,14 @@ namespace Umbraco.Core
             return s.LastIndexOf(value, StringComparison.OrdinalIgnoreCase);
         }
 
+        public static bool MatchesWildcard(this string str, string txt)
+        {
+            var wildcardmatch = new Regex("^" + Regex.Escape(txt).
+                                                      //deal with any wildcard chars %
+                                                      Replace(@"\%", ".*") + "$");
+
+            return wildcardmatch.IsMatch(str);
+        }
 
         /// <summary>
         /// Tries to parse a string into the supplied type by finding and using the Type's "Parse" method

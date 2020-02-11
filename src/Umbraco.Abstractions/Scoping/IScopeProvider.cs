@@ -82,11 +82,6 @@ namespace Umbraco.Core.Scoping
         /// </summary>
         IScopeContext Context { get; }
 
-        /// <summary>
-        /// Gets the sql context.
-        /// </summary>
-        ISqlContext SqlContext { get; }
-
 #if DEBUG_SCOPES
 
         IEnumerable<ScopeInfo> ScopeInfos { get; }

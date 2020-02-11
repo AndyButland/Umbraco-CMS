@@ -19,7 +19,7 @@ namespace Umbraco.Core.Persistence.Factories
                 logger.Warn(typeof(DataType), "Could not find an editor with alias {EditorAlias}, treating as Label."
                                                      +" The site may fail to boot and / or load data types and run.", dto.EditorAlias);
                 //convert to label
-                editor = new LabelPropertyEditor(logger, ioHelper,dataTypeService , localizedTextService, localizationService, shortStringHelper);
+                editor = new LabelPropertyEditor(logger, ioHelper, dataTypeService , localizedTextService, localizationService, shortStringHelper);
             }
 
             var dataType = new DataType(editor);

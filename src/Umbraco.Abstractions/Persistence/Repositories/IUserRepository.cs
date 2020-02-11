@@ -20,7 +20,14 @@ namespace Umbraco.Core.Persistence.Repositories
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
-        bool Exists(string username);
+        bool UsernameExists(string username);
+
+        /// <summary>
+        /// Checks if a user with the login exists
+        /// </summary>
+        /// <param name="login"></param>
+        /// <returns></returns>
+        bool LoginExists(string login);
 
         /// <summary>
         /// Gets a list of <see cref="IUser"/> objects associated with a given group
@@ -90,5 +97,7 @@ namespace Umbraco.Core.Persistence.Repositories
         int ClearLoginSessions(int userId);
         int ClearLoginSessions(TimeSpan timespan);
         void ClearLoginSession(Guid sessionId);
+
+        IEnumerable<IUser> GetNextUsers(int id, int count);
     }
 }

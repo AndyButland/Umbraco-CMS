@@ -1,7 +1,6 @@
 ﻿using System;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
-using Umbraco.Core.Persistence.Querying;
 using Umbraco.Core.Scoping;
 
 namespace Umbraco.Core.Services.Implement
@@ -21,7 +20,5 @@ namespace Umbraco.Core.Services.Implement
             EventMessagesFactory = eventMessagesFactory ?? throw new ArgumentNullException(nameof(eventMessagesFactory));
             ScopeProvider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
-
-        protected IQuery<T> Query<T>() => ScopeProvider.SqlContext.Query<T>();
     }
 }

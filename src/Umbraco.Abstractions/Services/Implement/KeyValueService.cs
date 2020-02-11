@@ -78,20 +78,5 @@ namespace Umbraco.Core.Services.Implement
             EnsureInitialized();
             return _keyValueRepository.TrySetValue(key, originValue, newValue);
         }
-
-        /// <summary>
-        /// Gets a value directly from the database, no scope, nothing.
-        /// </summary>
-        /// <remarks>Used by <see cref="Runtime.CoreRuntime"/> to determine the runtime state.</remarks>
-        internal static string GetValue(IUmbracoDatabase database, string key)
-        {
-            if (database is null) return null;
-
-            var sql = database.SqlContext.Sql()
-                .Select<KeyValueDto>()
-                .From<KeyValueDto>()
-                .Where<KeyValueDto>(x => x.Key == key);
-            return database.FirstOrDefault<KeyValueDto>(sql)?.Value;
-        }
     }
 }

@@ -29,13 +29,12 @@ namespace Umbraco.Core.Persistence.Repositories.Implement
     {
         private readonly Lazy<PropertyEditorCollection> _editors;
         private readonly IIOHelper _ioHelper;
-        private readonly Lazy<IDataTypeService> _dataTypeService;
         private readonly ILocalizedTextService _localizedTextService;
         private readonly ILocalizationService _localizationService;
         private readonly IShortStringHelper _shortStringHelper;
 
         // TODO: https://github.com/umbraco/Umbraco-CMS/issues/4237 - get rid of Lazy injection and fix circular dependencies
-        public DataTypeRepository(IScopeAccessor scopeAccessor, AppCaches cache, Lazy<PropertyEditorCollection> editors, ILogger logger, IIOHelper ioHelper, Lazy<IDataTypeService> dataTypeService, ILocalizedTextService localizedTextService, ILocalizationService localizationService, IShortStringHelper shortStringHelper)
+        public DataTypeRepository(IScopeAccessor scopeAccessor, AppCaches cache, Lazy<PropertyEditorCollection> editors, ILogger logger, IIOHelper ioHelper, ILocalizedTextService localizedTextService, ILocalizationService localizationService, IShortStringHelper shortStringHelper)
             : base(scopeAccessor, cache, logger)
         {
             _editors = editors;

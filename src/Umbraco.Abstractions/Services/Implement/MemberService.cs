@@ -537,10 +537,10 @@ namespace Umbraco.Core.Services.Implement
                         query.Where(member => member.Name.EndsWith(displayNameToMatch));
                         break;
                     case StringPropertyMatchType.Wildcard:
-                        query.Where(member => member.Name.SqlWildcard(displayNameToMatch, TextColumnType.NVarchar));
+                        query.Where(member => member.Name.MatchesWildcard(displayNameToMatch));
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(matchType)); // causes rollback // causes rollback
+                        throw new ArgumentOutOfRangeException(nameof(matchType)); // causes rollback
                 }
 
                 return _memberRepository.GetPage(query, pageIndex, pageSize, out totalRecords, null, Ordering.By("Name"));
@@ -646,16 +646,16 @@ namespace Umbraco.Core.Services.Implement
                 switch (matchType)
                 {
                     case StringPropertyMatchType.Exact:
-                        query = Query<IMember>().Where(x => ((Member) x).PropertyTypeAlias == propertyTypeAlias && (((Member) x).LongStringPropertyValue.SqlEquals(value, TextColumnType.NText) || ((Member) x).ShortStringPropertyValue.SqlEquals(value, TextColumnType.NVarchar)));
+                        query = Query<IMember>().Where(x => ((Member) x).PropertyTypeAlias == propertyTypeAlias && (((Member) x).LongStringPropertyValue.InvariantEquals(value) || ((Member) x).ShortStringPropertyValue.InvariantEquals(value)));
                         break;
                     case StringPropertyMatchType.Contains:
-                        query = Query<IMember>().Where(x => ((Member) x).PropertyTypeAlias == propertyTypeAlias && (((Member) x).LongStringPropertyValue.SqlContains(value, TextColumnType.NText) || ((Member) x).ShortStringPropertyValue.SqlContains(value, TextColumnType.NVarchar)));
+                        query = Query<IMember>().Where(x => ((Member) x).PropertyTypeAlias == propertyTypeAlias && (((Member) x).LongStringPropertyValue.InvariantContains(value) || ((Member) x).ShortStringPropertyValue.InvariantContains(value)));
                         break;
                     case StringPropertyMatchType.StartsWith:
-                        query = Query<IMember>().Where(x => ((Member) x).PropertyTypeAlias == propertyTypeAlias && (((Member) x).LongStringPropertyValue.SqlStartsWith(value, TextColumnType.NText) || ((Member) x).ShortStringPropertyValue.SqlStartsWith(value, TextColumnType.NVarchar)));
+                        query = Query<IMember>().Where(x => ((Member) x).PropertyTypeAlias == propertyTypeAlias && (((Member) x).LongStringPropertyValue.InvariantStartsWith(value) || ((Member) x).ShortStringPropertyValue.InvariantStartsWith(value)));
                         break;
                     case StringPropertyMatchType.EndsWith:
-                        query = Query<IMember>().Where(x => ((Member) x).PropertyTypeAlias == propertyTypeAlias && (((Member) x).LongStringPropertyValue.SqlEndsWith(value, TextColumnType.NText) || ((Member) x).ShortStringPropertyValue.SqlEndsWith(value, TextColumnType.NVarchar)));
+                        query = Query<IMember>().Where(x => ((Member) x).PropertyTypeAlias == propertyTypeAlias && (((Member) x).LongStringPropertyValue.InvariantEndsWith(value) || ((Member) x).ShortStringPropertyValue.InvariantEndsWith(value)));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(matchType));

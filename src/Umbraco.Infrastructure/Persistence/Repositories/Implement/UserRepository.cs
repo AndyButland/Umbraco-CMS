@@ -625,12 +625,22 @@ ORDER BY colName";
             return Database.ExecuteScalar<int>(sql);
         }
 
-        public bool Exists(string username)
+        public bool UsernameExists(string username)
         {
             var sql = SqlContext.Sql()
                 .SelectCount()
                 .From<UserDto>()
                 .Where<UserDto>(x => x.UserName == username);
+
+            return Database.ExecuteScalar<int>(sql) > 0;
+        }
+
+        public bool LoginExists(string login)
+        {
+            var sql = SqlContext.Sql()
+                .SelectCount()
+                .From<UserDto>()
+                .Where<UserDto>(x => x.Login == login);
 
             return Database.ExecuteScalar<int>(sql) > 0;
         }
@@ -847,7 +857,7 @@ ORDER BY colName";
             return sql;
         }
 
-        internal IEnumerable<IUser> GetNextUsers(int id, int count)
+        public IEnumerable<IUser> GetNextUsers(int id, int count)
         {
             var idsQuery = SqlContext.Sql()
                 .Select<UserDto>(x => x.Id)
